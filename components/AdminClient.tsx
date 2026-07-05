@@ -143,6 +143,30 @@ export default function AdminClient() {
     }
   }
 
+  async function onCancel(a: Appointment) {
+    if (!window.confirm("Termin wirklich stornieren? Kundendaten bleiben im Adminbereich erhalten.")) {
+      return;
+    }
+    try {
+      const res = await fetch(`/api/appointments/${a.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: "cancelled" }),
+      });
+      const json = await res.json();
+      if (res.status === 401) {
+        setView("login");
+      } else if (!res.ok) {
+        setFeedback({ ok: false, message: json.error ?? "Stornierung fehlgeschlagen." });
+      } else {
+        setFeedback({ ok: true, message: "Termin wurde storniert. Der Kunde sieht ihn nicht mehr." });
+        void load();
+      }
+    } catch {
+      setFeedback({ ok: false, message: "Stornierung fehlgeschlagen." });
+    }
+  }
+
   /* ---------------- Views ---------------- */
 
   if (view === "loading") {
@@ -294,7 +318,7 @@ export default function AdminClient() {
                       </span>
                     </td>
                     <td className="customer-cell">
-                      {a.status === "booked" ? (
+                      {a.customer_name ? (
                         <>
                           <strong>{a.customer_name}</strong>
                           {a.customer_email}
@@ -314,13 +338,27 @@ export default function AdminClient() {
                       )}
                     </td>
                     <td>
-                      <button
-                        type="button"
-                        className="btn btn--danger"
-                        onClick={() => onDelete(a)}
-                      >
-                        Löschen
-                      </button>
+                      {a.status === "booked" ? (
+                        new Date(a.start_time) > new Date() ? (
+                          <button
+                            type="button"
+                            className="btn btn--danger"
+                            onClick={() => onCancel(a)}
+                          >
+                            Stornieren
+                          </button>
+                        ) : (
+                          "–"
+                        )
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn--danger"
+                          onClick={() => onDelete(a)}
+                        >
+                          Löschen
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

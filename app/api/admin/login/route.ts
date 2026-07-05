@@ -6,11 +6,17 @@ import {
   sessionToken,
   verifyPassword,
 } from "@/lib/auth";
+import { rateLimit, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
 /** POST /api/admin/login → sets the admin session cookie. */
 export async function POST(req: NextRequest) {
+  // Brute-force protection: a handful of attempts per IP, then back off.
+  if (!rateLimit(req, "login", 10, 10 * 60_000)) {
+    return NextResponse.json({ error: RATE_LIMITED_MESSAGE }, { status: 429 });
+  }
+
   if (!isAuthConfigured()) {
     return NextResponse.json(
       {

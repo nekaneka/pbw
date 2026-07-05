@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStore } from "@/lib/store";
 import { sendBookingEmails } from "@/lib/email";
+import { rateLimit, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 import { BOOKING_REASONS, type BookingInput } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
@@ -22,6 +23,10 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!rateLimit(req, "book", 10, 10 * 60_000)) {
+    return NextResponse.json({ error: RATE_LIMITED_MESSAGE }, { status: 429 });
+  }
+
   const { id } = await params;
 
   let body: Partial<BookingInput>;

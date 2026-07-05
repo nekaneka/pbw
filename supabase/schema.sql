@@ -20,9 +20,21 @@ create table if not exists public.appointments (
   customer_reason text,
   created_at timestamptz not null default now(),
   booked_at timestamptz,
+  cancel_token text,
+  cancelled_at timestamptz,
 
   constraint appointments_time_valid check (end_time > start_time)
 );
+
+-- Migration for databases created before customer cancellation existed.
+alter table public.appointments
+  add column if not exists cancel_token text,
+  add column if not exists cancelled_at timestamptz;
+
+-- The cancellation token is a secret per booking and must be unique.
+create unique index if not exists appointments_cancel_token_idx
+  on public.appointments (cancel_token)
+  where cancel_token is not null;
 
 create index if not exists appointments_status_start_idx
   on public.appointments (status, start_time);

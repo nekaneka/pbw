@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { SITE } from "@/lib/site";
+import { rateLimit, RATE_LIMITED_MESSAGE } from "@/lib/rate-limit";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
  * Without RESEND_API_KEY the message is logged to the server console.
  */
 export async function POST(req: NextRequest) {
+  if (!rateLimit(req, "contact", 5, 10 * 60_000)) {
+    return NextResponse.json({ error: RATE_LIMITED_MESSAGE }, { status: 429 });
+  }
+
   let body: { name?: string; email?: string; phone?: string; message?: string };
   try {
     body = await req.json();

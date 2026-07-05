@@ -28,7 +28,10 @@ export default function Header() {
     <header className="site-header">
       <div className="container site-header__inner">
         <Link href="/" className="brand" onClick={() => setOpen(false)}>
-          Pflegeberatung <span>Wien</span>
+          <span className="brand__name">
+            Pflegeberatung <span>Wien</span>
+          </span>
+          <span className="brand__tagline">Gutachten &amp; Case Management</span>
         </Link>
 
         <button

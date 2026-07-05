@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 520" role="img" aria-labelledby="beratungTitle">
+  <title id="beratungTitle">Illustration: Pflegeberater bespricht Pflegegeld-Unterlagen mit einer älteren Person am Tisch, im Fenster die Silhouette des Stephansdoms</title>
+
+  <!-- background -->
+  <ellipse cx="360" cy="280" rx="330" ry="228" fill="#dfe9dd"/>
+  <ellipse cx="360" cy="468" rx="265" ry="20" fill="#cfdccb"/>
+
+  <!-- window with Stephansdom silhouette (Vienna cue) -->
+  <rect x="280" y="66" width="164" height="134" rx="10" fill="#faf7f2" stroke="#c3d2c0" stroke-width="4"/>
+  <circle cx="416" cy="94" r="11" fill="#d9b45f"/>
+  <!-- nave + roof + south tower with spire -->
+  <path d="M296 200 v-30 h44 l8 -14 l8 14 h6 v-38 l10 -38 l10 38 v68 Z" fill="#a4bfb6"/>
+  <line x1="282" y1="200" x2="442" y2="200" stroke="#c3d2c0" stroke-width="4"/>
+
+  <!-- plant -->
+  <g>
+    <path d="M636 390 C 616 350, 614 320, 634 292 C 642 322, 642 352, 640 390 Z" fill="#2a7a6c"/>
+    <path d="M650 390 C 668 356, 674 328, 664 300 C 652 326, 646 358, 646 390 Z" fill="#1d6357"/>
+    <path d="M626 388 C 606 370, 596 350, 598 328 C 614 346, 624 366, 630 388 Z" fill="#5a9a8d"/>
+    <path d="M614 388 h58 l-9 60 h-40 Z" fill="#c49a6c"/>
+  </g>
+
+  <!-- chairs -->
+  <rect x="96" y="252" width="20" height="180" rx="9" fill="#a1785242"/>
+  <rect x="92" y="248" width="22" height="176" rx="10" fill="#b08a5e"/>
+  <rect x="604" y="248" width="22" height="176" rx="10" fill="#b08a5e"/>
+
+  <!-- ===== consultant (left, seated, petrol tunic) ===== -->
+  <g>
+    <!-- lower legs behind table -->
+    <rect x="216" y="330" width="18" height="112" rx="9" fill="#123f3a"/>
+    <path d="M210 434 h36 a8 8 0 0 1 8 8 v6 h-44 Z" fill="#26302f"/>
+    <!-- thigh -->
+    <rect x="146" y="306" width="86" height="24" rx="12" fill="#175249"/>
+    <!-- torso -->
+    <path d="M136 236 q32 -16 62 0 q10 46 8 84 h-76 q-4 -38 6 -84 Z" fill="#1d6357"/>
+    <!-- badge -->
+    <rect x="178" y="262" width="14" height="18" rx="3" fill="#faf7f2"/>
+    <!-- arm pointing to the documents -->
+    <path d="M188 254 q64 22 108 48" stroke="#1d6357" stroke-width="20" stroke-linecap="round" fill="none"/>
+    <circle cx="300" cy="304" r="11" fill="#f2c9a5"/>
+    <!-- neck + head -->
+    <rect x="156" y="206" width="22" height="24" rx="10" fill="#f2c9a5"/>
+    <circle cx="167" cy="186" r="31" fill="#f2c9a5"/>
+    <path d="M137 182 a31 31 0 0 1 56 -14 q-8 -18 -28 -18 q-26 0 -28 32 Z" fill="#42392f"/>
+    <circle cx="160" cy="188" r="3" fill="#26302f"/>
+    <circle cx="180" cy="188" r="3" fill="#26302f"/>
+    <path d="M162 201 q8 7 16 0" stroke="#26302f" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- ===== elderly person (right, seated, glasses) ===== -->
+  <g>
+    <rect x="486" y="330" width="18" height="112" rx="9" fill="#5f6f6b"/>
+    <path d="M474 434 h36 a8 8 0 0 1 8 8 v6 h-44 Z" fill="#4d4238"/>
+    <rect x="488" y="306" width="86" height="24" rx="12" fill="#87a09a"/>
+    <path d="M522 236 q32 -16 62 0 q10 46 6 84 h-76 q-2 -38 8 -84 Z" fill="#92a5a0"/>
+    <!-- arm resting toward the papers -->
+    <path d="M532 258 q-58 24 -100 46" stroke="#92a5a0" stroke-width="20" stroke-linecap="round" fill="none"/>
+    <circle cx="426" cy="306" r="11" fill="#f2c9a5"/>
+    <!-- neck + head -->
+    <rect x="542" y="206" width="22" height="24" rx="10" fill="#f2c9a5"/>
+    <circle cx="553" cy="186" r="31" fill="#f2c9a5"/>
+    <!-- grey hair -->
+    <path d="M524 180 a31 31 0 0 1 56 -12 q-6 -20 -28 -20 q-26 0 -28 32 Z" fill="#cfd6d6"/>
+    <!-- glasses -->
+    <circle cx="544" cy="188" r="7.5" fill="none" stroke="#26302f" stroke-width="2.5"/>
+    <circle cx="564" cy="188" r="7.5" fill="none" stroke="#26302f" stroke-width="2.5"/>
+    <line x1="551.5" y1="188" x2="556.5" y2="188" stroke="#26302f" stroke-width="2.5"/>
+    <path d="M548 203 q7 6 14 0" stroke="#26302f" stroke-width="3" stroke-linecap="round" fill="none"/>
+  </g>
+
+  <!-- ===== table with documents ===== -->
+  <rect x="196" y="336" width="16" height="112" rx="6" fill="#a67a50"/>
+  <rect x="508" y="336" width="16" height="112" rx="6" fill="#a67a50"/>
+  <rect x="180" y="320" width="360" height="18" rx="8" fill="#b98d62"/>
+
+  <!-- loose sheet -->
+  <rect x="252" y="288" width="70" height="34" rx="4" fill="#ffffff" stroke="#e0ddd4" stroke-width="2"/>
+  <line x1="262" y1="299" x2="310" y2="299" stroke="#c9c4b8" stroke-width="3" stroke-linecap="round"/>
+  <line x1="262" y1="310" x2="296" y2="310" stroke="#c9c4b8" stroke-width="3" stroke-linecap="round"/>
+
+  <!-- clipboard with checklist -->
+  <g>
+    <rect x="336" y="266" width="74" height="56" rx="6" fill="#faf7f2" stroke="#175249" stroke-width="3"/>
+    <rect x="362" y="258" width="22" height="12" rx="5" fill="#a07c2e"/>
+    <rect x="346" y="280" width="12" height="12" rx="3" fill="none" stroke="#1d6357" stroke-width="2.5"/>
+    <path d="M348 286 l3 4 l6 -7" stroke="#1d6357" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <line x1="364" y1="286" x2="398" y2="286" stroke="#c9c4b8" stroke-width="3" stroke-linecap="round"/>
+    <rect x="346" y="300" width="12" height="12" rx="3" fill="none" stroke="#1d6357" stroke-width="2.5"/>
+    <path d="M348 306 l3 4 l6 -7" stroke="#1d6357" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    <line x1="364" y1="306" x2="392" y2="306" stroke="#c9c4b8" stroke-width="3" stroke-linecap="round"/>
+  </g>
+
+  <!-- coffee cup -->
+  <rect x="446" y="298" width="22" height="20" rx="4" fill="#ffffff" stroke="#e0ddd4" stroke-width="2"/>
+  <path d="M468 302 a7 7 0 0 1 0 12" fill="none" stroke="#e0ddd4" stroke-width="3"/>
+  <path d="M452 292 q2 -5 0 -9 M460 292 q2 -5 0 -9" stroke="#c9c4b8" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+</svg>

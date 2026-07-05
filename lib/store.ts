@@ -10,12 +10,13 @@
  *    external service. NOT suitable for production (serverless filesystems
  *    are ephemeral).
  *
- * All booking-critical validation (slot still open? slots overlapping?)
- * happens here on the server – the client is never trusted.
+ * All booking-critical validation (slot still open? slots overlapping?
+ * cancellation token valid?) happens here on the server – the client is
+ * never trusted.
  */
 import { promises as fs } from "fs";
 import path from "path";
-import { randomUUID } from "crypto";
+import { randomBytes, randomUUID } from "crypto";
 import type { Appointment, BookingInput, CreateSlotInput } from "./types";
 
 export type StoreResult<T> =
@@ -29,14 +30,35 @@ export interface AppointmentStore {
   listAll(): Promise<Appointment[]>;
   /** Create a slot; rejects overlaps with existing non-cancelled slots. */
   create(input: CreateSlotInput): Promise<StoreResult<Appointment>>;
-  /** Book a slot; rejects if it is no longer open. */
+  /** Book a slot; rejects if it is no longer open. Generates the cancel token. */
   book(id: string, input: BookingInput): Promise<StoreResult<Appointment>>;
+  /** Customer cancellation via the secret e-mail token. */
+  cancelByToken(token: string): Promise<StoreResult<Appointment>>;
+  /** Admin cancellation of a booked future appointment. Keeps customer data. */
+  cancelByAdmin(id: string): Promise<StoreResult<Appointment>>;
+  /** Hard delete – refused for booked appointments (cancel instead). */
   delete(id: string): Promise<StoreResult<null>>;
+}
+
+/** Cryptographically random, unpredictable cancellation token (64 hex chars). */
+function createCancelToken(): string {
+  return randomBytes(32).toString("hex");
 }
 
 function overlaps(aStart: string, aEnd: string, bStart: string, bEnd: string): boolean {
   return new Date(aStart) < new Date(bEnd) && new Date(aEnd) > new Date(bStart);
 }
+
+// Deliberately generic – must not reveal whether a token exists.
+const ERR_TOKEN_INVALID =
+  "Der Stornierungslink ist ungültig oder abgelaufen. Bitte kontaktieren Sie uns direkt.";
+const ERR_ALREADY_CANCELLED = "Dieser Termin wurde bereits storniert.";
+const ERR_IN_PAST =
+  "Dieser Termin liegt in der Vergangenheit und kann nicht mehr storniert werden.";
+const ERR_DELETE_BOOKED =
+  "Gebuchte Termine können nicht gelöscht werden. Bitte stattdessen stornieren – die Kundendaten bleiben erhalten.";
+const ERR_NOT_FOUND = "Termin nicht gefunden.";
+const ERR_NOT_CANCELLABLE = "Nur gebuchte, zukünftige Termine können storniert werden.";
 
 /* ------------------------------------------------------------------ */
 /* File store (local development)                                      */
@@ -108,6 +130,8 @@ class FileStore implements AppointmentStore {
         customer_reason: null,
         created_at: new Date().toISOString(),
         booked_at: null,
+        cancel_token: null,
+        cancelled_at: null,
       };
       all.push(appointment);
       await this.writeAll(all);
@@ -120,7 +144,7 @@ class FileStore implements AppointmentStore {
       const all = await this.readAll();
       const appointment = all.find((a) => a.id === id);
       if (!appointment) {
-        return { ok: false as const, error: "Termin nicht gefunden.", status: 404 };
+        return { ok: false as const, error: ERR_NOT_FOUND, status: 404 };
       }
       if (appointment.status !== "open") {
         return {
@@ -136,6 +160,48 @@ class FileStore implements AppointmentStore {
       appointment.customer_reason = input.customer_reason;
       appointment.customer_message = input.customer_message;
       appointment.booked_at = new Date().toISOString();
+      appointment.cancel_token = createCancelToken();
+      await this.writeAll(all);
+      return { ok: true as const, data: appointment };
+    });
+  }
+
+  async cancelByToken(token: string): Promise<StoreResult<Appointment>> {
+    return withFileLock(async () => {
+      const all = await this.readAll();
+      const appointment = all.find((a) => a.cancel_token === token);
+      if (!appointment) {
+        return { ok: false as const, error: ERR_TOKEN_INVALID, status: 404 };
+      }
+      if (appointment.status === "cancelled") {
+        return { ok: false as const, error: ERR_ALREADY_CANCELLED, status: 409 };
+      }
+      if (appointment.status !== "booked") {
+        return { ok: false as const, error: ERR_TOKEN_INVALID, status: 404 };
+      }
+      if (new Date(appointment.start_time) <= new Date()) {
+        return { ok: false as const, error: ERR_IN_PAST, status: 409 };
+      }
+      // Customer data stays on the record so the admin keeps the history.
+      appointment.status = "cancelled";
+      appointment.cancelled_at = new Date().toISOString();
+      await this.writeAll(all);
+      return { ok: true as const, data: appointment };
+    });
+  }
+
+  async cancelByAdmin(id: string): Promise<StoreResult<Appointment>> {
+    return withFileLock(async () => {
+      const all = await this.readAll();
+      const appointment = all.find((a) => a.id === id);
+      if (!appointment) {
+        return { ok: false as const, error: ERR_NOT_FOUND, status: 404 };
+      }
+      if (appointment.status !== "booked" || new Date(appointment.start_time) <= new Date()) {
+        return { ok: false as const, error: ERR_NOT_CANCELLABLE, status: 409 };
+      }
+      appointment.status = "cancelled";
+      appointment.cancelled_at = new Date().toISOString();
       await this.writeAll(all);
       return { ok: true as const, data: appointment };
     });
@@ -144,11 +210,14 @@ class FileStore implements AppointmentStore {
   async delete(id: string): Promise<StoreResult<null>> {
     return withFileLock(async () => {
       const all = await this.readAll();
-      const next = all.filter((a) => a.id !== id);
-      if (next.length === all.length) {
-        return { ok: false as const, error: "Termin nicht gefunden.", status: 404 };
+      const appointment = all.find((a) => a.id === id);
+      if (!appointment) {
+        return { ok: false as const, error: ERR_NOT_FOUND, status: 404 };
       }
-      await this.writeAll(next);
+      if (appointment.status === "booked") {
+        return { ok: false as const, error: ERR_DELETE_BOOKED, status: 409 };
+      }
+      await this.writeAll(all.filter((a) => a.id !== id));
       return { ok: true as const, data: null };
     });
   }
@@ -239,6 +308,7 @@ class SupabaseStore implements AppointmentStore {
           customer_reason: input.customer_reason,
           customer_message: input.customer_message,
           booked_at: new Date().toISOString(),
+          cancel_token: createCancelToken(),
         }),
       }
     );
@@ -254,15 +324,81 @@ class SupabaseStore implements AppointmentStore {
     return { ok: true, data: rows[0] };
   }
 
+  async cancelByToken(token: string): Promise<StoreResult<Appointment>> {
+    // Atomic conditional update: only a booked, future appointment with this
+    // exact token is cancelled.
+    const now = new Date().toISOString();
+    const res = await this.request(
+      `appointments?cancel_token=eq.${encodeURIComponent(token)}&status=eq.booked&start_time=gt.${encodeURIComponent(now)}`,
+      {
+        method: "PATCH",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify({ status: "cancelled", cancelled_at: now }),
+      }
+    );
+    if (!res.ok) throw new Error(`Supabase cancelByToken failed: ${res.status}`);
+    const rows = (await res.json()) as Appointment[];
+    if (rows.length > 0) {
+      return { ok: true, data: rows[0] };
+    }
+
+    // Nothing updated – find out why, without leaking customer data.
+    const lookupRes = await this.request(
+      `appointments?cancel_token=eq.${encodeURIComponent(token)}&select=status,start_time&limit=1`
+    );
+    if (!lookupRes.ok) throw new Error(`Supabase cancel lookup failed: ${lookupRes.status}`);
+    const found = (await lookupRes.json()) as Array<{ status: string; start_time: string }>;
+    if (found.length === 0) {
+      return { ok: false, error: ERR_TOKEN_INVALID, status: 404 };
+    }
+    if (found[0].status === "cancelled") {
+      return { ok: false, error: ERR_ALREADY_CANCELLED, status: 409 };
+    }
+    if (new Date(found[0].start_time) <= new Date()) {
+      return { ok: false, error: ERR_IN_PAST, status: 409 };
+    }
+    return { ok: false, error: ERR_TOKEN_INVALID, status: 404 };
+  }
+
+  async cancelByAdmin(id: string): Promise<StoreResult<Appointment>> {
+    const now = new Date().toISOString();
+    const res = await this.request(
+      `appointments?id=eq.${encodeURIComponent(id)}&status=eq.booked&start_time=gt.${encodeURIComponent(now)}`,
+      {
+        method: "PATCH",
+        headers: { Prefer: "return=representation" },
+        body: JSON.stringify({ status: "cancelled", cancelled_at: now }),
+      }
+    );
+    if (!res.ok) throw new Error(`Supabase cancelByAdmin failed: ${res.status}`);
+    const rows = (await res.json()) as Appointment[];
+    if (rows.length === 0) {
+      return { ok: false, error: ERR_NOT_CANCELLABLE, status: 409 };
+    }
+    return { ok: true, data: rows[0] };
+  }
+
   async delete(id: string): Promise<StoreResult<null>> {
-    const res = await this.request(`appointments?id=eq.${encodeURIComponent(id)}`, {
-      method: "DELETE",
-      headers: { Prefer: "return=representation" },
-    });
+    // Booked appointments must be cancelled, never hard-deleted.
+    const res = await this.request(
+      `appointments?id=eq.${encodeURIComponent(id)}&status=neq.booked`,
+      {
+        method: "DELETE",
+        headers: { Prefer: "return=representation" },
+      }
+    );
     if (!res.ok) throw new Error(`Supabase delete failed: ${res.status}`);
     const rows = (await res.json()) as unknown[];
     if (rows.length === 0) {
-      return { ok: false, error: "Termin nicht gefunden.", status: 404 };
+      const lookup = await this.request(
+        `appointments?id=eq.${encodeURIComponent(id)}&select=status&limit=1`
+      );
+      if (!lookup.ok) throw new Error(`Supabase delete lookup failed: ${lookup.status}`);
+      const found = (await lookup.json()) as Array<{ status: string }>;
+      if (found.length > 0 && found[0].status === "booked") {
+        return { ok: false, error: ERR_DELETE_BOOKED, status: 409 };
+      }
+      return { ok: false, error: ERR_NOT_FOUND, status: 404 };
     }
     return { ok: true, data: null };
   }

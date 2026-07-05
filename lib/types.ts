@@ -14,6 +14,30 @@ export interface Appointment {
   customer_reason: string | null;
   created_at: string;
   booked_at: string | null;
+  /** Secret cancellation token – only ever sent to the customer by e-mail. */
+  cancel_token: string | null;
+  cancelled_at: string | null;
+}
+
+/** Safe subset returned by the public cancellation endpoint. */
+export interface CancellationResult {
+  id: string;
+  start_time: string;
+  end_time: string;
+  appointment_type: string;
+  location: string;
+  status: AppointmentStatus;
+}
+
+export function toCancellationResult(a: Appointment): CancellationResult {
+  return {
+    id: a.id,
+    start_time: a.start_time,
+    end_time: a.end_time,
+    appointment_type: a.appointment_type,
+    location: a.location,
+    status: a.status,
+  };
 }
 
 /** Public shape returned to customers – no customer data, only open slots. */

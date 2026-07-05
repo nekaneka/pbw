@@ -1,26 +1,49 @@
 # Pflegeberatung Wien – Gutachten & Case Management
 
-Moderne, barrierearme Website mit Online-Terminbuchung für eine Pflegeberatung in Wien.
+Ruhige, barrierearme Website mit Online-Terminbuchung und Stornierung für eine unabhängige Pflegeberatung in Wien.
 
 **Stack:** Next.js (App Router) · TypeScript · Clean CSS · Supabase (Postgres) · Resend · Vercel
 
 ## Features
 
-- **Startseite** mit Hero, Vertrauens-Badges, Über mich, Leistungsportfolio (5 Karten), 3-Schritte-Ablauf und Kontaktformular
+- **Startseite** mit eigenständiger visueller Identität für österreichische Pflegeberatung:
+  tiefes Petrol, warmes Papierweiß, gedecktes Salbeigrün und ein zurückhaltender Goldakzent,
+  Serifen-Überschriften, strukturierte Vertrauenssignale (DGKP, 13 Jahre Berufserfahrung,
+  Pflegegeldbegutachter-Ausbildung, Vor-Ort in Wien), konkrete Leistungskarten mit
+  Checklisten und eigene Illustrationen (Beratungsgespräch mit Stephansdom-Silhouette,
+  Pflegegeld-Antrag mit Checkliste und Prüfsiegel)
 - **Terminbuchung** (`/termin`):
-  - Kund:innen sehen **nur offene, zukünftige Termine** (keine Kundendaten, kein gebuchter Termin)
+  - Kund:innen sehen **nur offene, zukünftige Termine** – gebuchte und stornierte Termine,
+    Kundendaten und Stornierungs-Tokens tauchen öffentlich nie auf
   - Buchung mit Name, E-Mail, Telefon, Anliegen und Nachricht
-  - **Serverseitige Validierung**: ein Termin kann nur gebucht werden, wenn er noch `open` ist (bei Supabase als atomarer Conditional-Update → keine Doppelbuchung möglich)
-  - Gebuchte Termine verschwinden sofort aus der öffentlichen Liste
+  - **Serverseitige Validierung**: ein Termin kann nur gebucht werden, wenn er noch `open`
+    ist (bei Supabase als atomarer Conditional-Update → keine Doppelbuchung möglich)
+- **Stornierung ohne Kundenkonto** (`/termin/stornieren?token=…`):
+  - Bei jeder Buchung wird ein kryptografisch zufälliger, nicht erratbarer Token erzeugt
+    (`randomBytes(32)`, 64 Hex-Zeichen)
+  - Der Token steht ausschließlich im Stornierungslink der Bestätigungs-E-Mail
+  - Storniert werden können nur **gebuchte, zukünftige** Termine; die Antwort enthält keine
+    Kundendaten, Fehlermeldungen verraten nicht, ob ein Token existiert
+  - Stornierte Termine bleiben mit Kundendaten in der Admin-Historie erhalten
 - **Adminbereich** (`/admin`, **passwortgeschützt**):
   - Login mit Passwort (`ADMIN_PASSWORD` in `.env.local`), Session als HttpOnly-Cookie
-  - Verfügbarkeiten anlegen (Datum, Beginn, Ende, Terminart, Ort)
-  - **Überschneidende Zeitfenster werden abgelehnt** (App-Logik + DB-Constraint)
-  - Alle Termine inkl. Status und Kundendaten einsehen, Termine löschen
+  - Verfügbarkeiten anlegen; **überschneidende Zeitfenster werden abgelehnt**
+    (App-Logik + DB-Constraint)
+  - Offene Termine: **Löschen** · Gebuchte zukünftige Termine: **Stornieren**
+    (kein Hard-Delete, Kundendaten bleiben erhalten) · Stornierte Termine: Historie, optional löschbar
   - Alle Admin-API-Routen sind serverseitig geschützt (401 ohne gültige Session)
-- **E-Mails** via Resend: Bestätigung an Kund:in + Benachrichtigung an Anbieter (ohne API-Key werden Mails nur in die Server-Konsole geloggt)
-- **SEO**: Metadaten, Open Graph, Twitter Cards, Canonical, JSON-LD (`ProfessionalService`), `robots.txt`, `sitemap.xml`
-- **Barrierefreiheit**: semantisches HTML, große Schrift, starker Kontrast, Skip-Link, sichtbare Fokus-Zustände, beschriftete Formulare, zugängliches mobiles Menü, `prefers-reduced-motion` wird respektiert
+- **E-Mails** via Resend: Buchungs- und Stornierungsbestätigung an Kund:in (inkl.
+  Stornierungslink) + Benachrichtigung an den Anbieter. Ohne API-Key werden Mails in die
+  Konsole geloggt und an `./.data/emails.log` angehängt
+- **Missbrauchsschutz**: einfacher In-Memory-Rate-Limiter pro IP für Buchung, Stornierung,
+  Kontaktformular und Login ([`lib/rate-limit.ts`](lib/rate-limit.ts)). Für echten
+  Produktionsbetrieb die Zähler in Vercel KV / Upstash Redis auslagern – nur diese eine
+  Datei muss dafür geändert werden
+- **SEO**: Metadaten, Open Graph, Twitter Cards, Canonical, JSON-LD (`ProfessionalService`),
+  `robots.txt`, `sitemap.xml`; Storno- und Adminseiten sind `noindex`
+- **Barrierefreiheit**: semantisches HTML, große Schrift, starker Kontrast, Skip-Link,
+  sichtbare Fokus-Zustände, beschriftete Formulare, zugängliches mobiles Menü,
+  `prefers-reduced-motion` wird respektiert
 
 ## Schnellstart (lokal, ohne externe Dienste)
 
@@ -31,13 +54,16 @@ npm run dev
 
 → http://localhost:3000
 
-Ohne weitere Konfiguration nutzt die App einen **lokalen JSON-Dateispeicher** (`./.data/appointments.json`) und loggt E-Mails in die Konsole. So kann der komplette Buchungsablauf sofort getestet werden:
+Ohne weitere Konfiguration nutzt die App einen **lokalen JSON-Dateispeicher**
+(`./.data/appointments.json`) und loggt E-Mails in Konsole + `./.data/emails.log`.
+So kann der komplette Ablauf sofort getestet werden:
 
 1. `/admin` öffnen → mit dem Passwort aus `.env.local` anmelden (`ADMIN_PASSWORD`, bitte ändern!) → Verfügbarkeit anlegen
-2. `/termin` öffnen → der Termin erscheint im Kundenbereich → auswählen, Formular ausfüllen, buchen
-3. Der Termin verschwindet aus der Kundenliste und erscheint unter `/admin` als **Gebucht** inkl. Kundendaten
+2. `/termin` öffnen → Termin auswählen, Formular ausfüllen, buchen
+3. Der Termin verschwindet aus der Kundenliste und erscheint unter `/admin` als **Gebucht**
+4. Den Stornierungslink aus `./.data/emails.log` öffnen → Termin stornieren → Status **Storniert**
 
-### Buchungslogik testen (Smoke-Test)
+### Smoke-Test
 
 Bei laufendem Server (`npm run dev` oder `npm start`):
 
@@ -45,15 +71,18 @@ Bei laufendem Server (`npm run dev` oder `npm start`):
 node test-flow.mjs <ADMIN_PASSWORD>
 ```
 
-Prüft automatisch: Admin-Routen ohne Login gesperrt (401), Login/falsches Passwort, Slot anlegen, Überlappung abgelehnt, ungültige Zeiten abgelehnt, öffentliche Liste ohne Kundendaten, Buchung, Doppelbuchung abgelehnt, Admin-Sicht, Löschen.
+Prüft den gesamten Lebenszyklus: Auth-Sperren, Slot-Anlage, Überlappungsschutz,
+öffentliche Liste ohne Kundendaten/Token, Buchung, Token-Erzeugung, Stornierungslink in
+der geloggten E-Mail, Doppelbuchung, Stornierung per Token (einmalig), ungültige Tokens,
+Admin-Stornierung, Löschschutz für gebuchte Termine.
 
 ## Produktiv-Setup
 
 ### 1. Supabase (Datenbank)
 
-1. Projekt auf [supabase.com](https://supabase.com) anlegen
+1. Projekt auf [supabase.com](https://supabase.com) anlegen (Region idealerweise EU/Frankfurt)
 2. Inhalt von [`supabase/schema.sql`](supabase/schema.sql) im SQL-Editor ausführen
-   (legt die Tabelle `appointments` an, inkl. Überlappungs-Constraint und RLS)
+   (Tabelle `appointments` inkl. Überlappungs-Constraint, Stornierungs-Spalten und RLS)
 3. In `.env.local` eintragen:
    ```
    NEXT_PUBLIC_SUPABASE_URL=https://xxxx.supabase.co
@@ -76,11 +105,17 @@ Sobald beide Variablen gesetzt sind, verwendet die App automatisch Supabase stat
 ### 3. Vercel (Hosting)
 
 1. Repository zu GitHub pushen
-2. Projekt auf [vercel.com](https://vercel.com) importieren (Framework: Next.js, keine Sonderkonfiguration nötig)
+2. Projekt auf [vercel.com](https://vercel.com) importieren (Framework: Next.js)
 3. Alle Umgebungsvariablen aus `.env.example` im Vercel-Dashboard setzen
-4. ⚠️ In Produktion **muss Supabase konfiguriert sein** – der JSON-Dateispeicher funktioniert auf Vercel nicht dauerhaft (serverless Dateisystem ist flüchtig)
+4. ⚠️ In Produktion **muss Supabase konfiguriert sein** – der JSON-Dateispeicher
+   funktioniert auf Vercel nicht dauerhaft (serverless Dateisystem ist flüchtig)
+5. Hinweis: Der In-Memory-Rate-Limiter zählt auf Vercel pro Instanz. Für strikte Limits
+   die Zähler in Vercel KV / Upstash Redis verlagern (nur `lib/rate-limit.ts` anpassen)
 
 ## Platzhalter vor Go-live ersetzen
+
+Alle Stammdaten liegen zentral in [`lib/site.ts`](lib/site.ts) und speisen Footer,
+Kontaktbereich, Metadaten, JSON-LD, Sitemap und Robots.
 
 | Platzhalter | Wo |
 | --- | --- |
@@ -93,34 +128,46 @@ Sobald beide Variablen gesetzt sind, verwendet die App automatisch Supabase stat
 
 ## Offene Punkte (bewusst für später)
 
-- **Supabase Auth statt Passwort-Login**: Der Adminbereich ist mit einem Passwort (`ADMIN_PASSWORD`) und HttpOnly-Session-Cookie geschützt. Für mehrere Admins oder höhere Sicherheit später auf Supabase Auth umstellen – alle API-Routen prüfen zentral über `isAdminRequest()` in [`lib/auth.ts`](lib/auth.ts), nur diese Funktion muss ersetzt werden.
-- **Echte Fotos**: Die Illustrationen (`public/hero-illustration.svg`, `public/portrait-placeholder.svg`) sind Platzhalter im Markendesign – für mehr Vertrauen durch echte Porträt-/Beratungsfotos ersetzen.
-- **Impressum & Datenschutz**: Die Seiten `/impressum` und `/datenschutz` sind Platzhalter und **müssen vor Veröffentlichung rechtlich geprüft werden**.
-- Open-Graph-Bild (`og-image`) ergänzen, sobald Logo/Branding vorhanden ist.
+- **Supabase Auth statt Passwort-Login**: Der Adminbereich ist mit einem Passwort
+  (`ADMIN_PASSWORD`) und HttpOnly-Session-Cookie geschützt. Für mehrere Admins später auf
+  Supabase Auth umstellen – alle API-Routen prüfen zentral über `isAdminRequest()` in
+  [`lib/auth.ts`](lib/auth.ts), nur diese Funktion muss ersetzt werden.
+- **Impressum & Datenschutz**: Die Seiten `/impressum` und `/datenschutz` sind strukturierte
+  Entwürfe mit markierten TODO-Stellen und **müssen vor Veröffentlichung rechtlich geprüft
+  werden**.
+- Open-Graph-Bild (`og-image`) ergänzen, sobald Logo/Branding final ist.
+
+Die Illustrationen (`public/illustration-beratung.svg`, `public/illustration-pflegegeld.svg`)
+sind eigens für die Seite gestaltete Motive im Markenstil (Beratungsgespräch, Pflegegeld-
+Unterlagen) – sie sind bewusst Teil der visuellen Identität und keine Platzhalter. Echte
+Fotos können später zusätzlich eingebunden werden, sind aber nicht erforderlich.
 
 ## Projektstruktur
 
 ```
 app/
   page.tsx              Startseite
-  termin/page.tsx       Terminbuchung (nur Kundenbereich)
+  termin/page.tsx       Terminbuchung (Kundenbereich)
+  termin/stornieren/    Stornierung per E-Mail-Link (noindex)
   admin/page.tsx        Adminbereich mit Login
-  impressum/  datenschutz/   Rechtliche Platzhalterseiten
+  impressum/  datenschutz/   Strukturierte Rechtsseiten-Entwürfe
   api/appointments/     GET (open öffentlich / all nur Admin), POST (Slot anlegen, nur Admin)
-    [id]/               DELETE (Slot löschen, nur Admin)
-    [id]/book/          POST (Buchung mit Serverprüfung, öffentlich)
-  api/admin/            login/ logout/ (Session-Cookie)
-  api/contact/          POST (Kontaktformular)
+    [id]/               DELETE (nur offene/stornierte), PATCH (Admin-Stornierung)
+    [id]/book/          POST (Buchung mit Serverprüfung, öffentlich, rate-limited)
+    cancel/             POST (Stornierung per Token, öffentlich, rate-limited)
+  api/admin/            login/ logout/ (Session-Cookie, Login rate-limited)
+  api/contact/          POST (Kontaktformular, rate-limited)
   robots.ts sitemap.ts  SEO
-components/             Header, Footer, Reveal, ContactForm, TerminClient, AdminClient
+components/             Header, Footer, Reveal, ContactForm, TerminClient, AdminClient, StornoClient
 lib/
-  site.ts               Zentrale Stammdaten & Platzhalter
-  types.ts              Datenmodell (appointments)
+  site.ts               Zentrale Stammdaten & Go-live-Platzhalter
+  types.ts              Datenmodell (appointments inkl. cancel_token/cancelled_at)
   store.ts              Datenzugriff: FileStore (dev) / SupabaseStore (prod)
   auth.ts               Admin-Login (Passwort + HttpOnly-Session-Cookie)
+  rate-limit.ts         In-Memory-Rate-Limiter (Produktion: KV/Redis)
   format.ts             Datums-/Zeitformatierung (Europe/Vienna)
-  email.ts              Resend-Integration
-public/                 Illustrationen (Platzhalter für echte Fotos)
+  email.ts              Resend-Integration (Buchung + Stornierung)
+public/                 Eigene SVG-Illustrationen im Markenstil
 supabase/schema.sql     Datenbankschema inkl. Constraints & RLS
 ```
 

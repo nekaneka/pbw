@@ -3,54 +3,130 @@ import Reveal from "@/components/Reveal";
 import ContactForm from "@/components/ContactForm";
 import { SITE } from "@/lib/site";
 
-const TRUST_BADGES = [
-  "DGKP",
-  "13 Jahre Berufserfahrung",
-  "Vor-Ort-Beratung in Wien",
-  "Unabhängige Einschätzung",
-  "Zusatzausbildung zum Pflegegeldbegutachter",
+const TRUST_SIGNALS = [
+  {
+    term: "DGKP",
+    detail: "Diplomierter Gesundheits- und Krankenpfleger, gehobener Dienst",
+  },
+  {
+    term: "13 Jahre Berufserfahrung",
+    detail: "Klinische Praxis in der Gesundheits- und Krankenpflege",
+  },
+  {
+    term: "Pflegegeldbegutachter",
+    detail: "Zertifizierte Zusatzausbildung für Einstufung & Gutachten",
+  },
+  {
+    term: "Vor Ort in Wien",
+    detail: "Hausbesuche in allen Bezirken – Termine nach Vereinbarung",
+  },
 ];
+
+/* Small custom stroke icons in the brand palette – one per service. */
+const ICONS = {
+  document: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M7 3h7l4 4v14H7z" />
+      <path d="M14 3v4h4" />
+      <path d="M10 12l1.5 1.5L14.5 10" />
+      <path d="M10 17h5" />
+    </svg>
+  ),
+  route: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="6" cy="19" r="2.5" />
+      <circle cx="18" cy="5" r="2.5" />
+      <path d="M8.5 19H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5" />
+    </svg>
+  ),
+  home: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M3 11l9-7 9 7" />
+      <path d="M5 10v10h14V10" />
+      <path d="M10 20v-6h4v6" />
+    </svg>
+  ),
+  people: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <circle cx="8.5" cy="8" r="3" />
+      <circle cx="16.5" cy="9.5" r="2.4" />
+      <path d="M3.5 20c0-3 2.2-5 5-5s5 2 5 5" />
+      <path d="M14.5 15.6c2.7 0 5 1.8 5 4.4" />
+    </svg>
+  ),
+  shield: (
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z" />
+      <path d="M9 12l2 2 4-4.5" />
+    </svg>
+  ),
+};
 
 const SERVICES = [
   {
-    icon: "📋",
+    icon: ICONS.document,
     title: "Pflegegeld-Einstufung & Gutachten",
-    text: "Unabhängige Ersteinstufung vor Ort, Unterstützung bei Erst- und Erhöhungsanträgen sowie fachliche Begleitung bei offiziellen Begutachtungsterminen (z. B. PVA, ÖGK).",
+    text: "Damit der tatsächliche Pflegebedarf auch anerkannt wird.",
+    points: [
+      "Unabhängige Ersteinstufung bei Ihnen zu Hause",
+      "Erst- und Erhöhungsanträge fachlich vorbereitet",
+      "Begleitung bei Begutachtungsterminen von PVA, ÖGK & Co.",
+    ],
   },
   {
-    icon: "🧭",
+    icon: ICONS.route,
     title: "Privates Case & Care Management",
-    text: "Häusliche Pflege-Audits, Erstellung individueller Versorgungspläne sowie Organisation und Vermittlung von mobilen Diensten oder 24-Stunden-Betreuungen.",
+    text: "Die passende Versorgung planen, organisieren und koordinieren.",
+    points: [
+      "Häusliches Pflege-Audit mit klarem Ergebnis",
+      "Individueller Versorgungsplan für Ihre Situation",
+      "Vermittlung mobiler Dienste und 24-Stunden-Betreuung",
+    ],
   },
   {
-    icon: "🏠",
+    icon: ICONS.home,
     title: "Wohnraum- & Barrierefreiheitsberatung",
-    text: "Analyse von Sturzquellen zu Hause und Erstellung von pflegefachlichen Umbau-Gutachten für Förderansuchen (z. B. Sozialministeriumservice).",
+    text: "Sicher zu Hause wohnen bleiben – so lange wie möglich.",
+    points: [
+      "Analyse von Sturzquellen in der Wohnung",
+      "Pflegefachliche Umbau-Gutachten",
+      "Unterlagen für Förderansuchen, z. B. Sozialministeriumservice",
+    ],
   },
   {
-    icon: "🤝",
+    icon: ICONS.people,
     title: "Angehörigen-Coaching",
-    text: "Praxisnahe Schulungen direkt am Krankenbett – z. B. rückenschonende Mobilisation und Kinästhetik – sowie Entlastungsgespräche zur Burnout-Prophylaxe.",
+    text: "Pflegende Angehörige stärken und entlasten.",
+    points: [
+      "Praxisschulung direkt am Krankenbett",
+      "Rückenschonende Mobilisation & Kinästhetik",
+      "Entlastungsgespräche zur Burnout-Prophylaxe",
+    ],
   },
   {
-    icon: "✅",
+    icon: ICONS.shield,
     title: "Qualitätssicherung",
-    text: "Zertifizierte Qualitätsvisiten und Pflege-Zustandskontrollen bei bestehenden 24-Stunden-Betreuungen für Familien und Agenturen.",
+    text: "Gewissheit, dass die Betreuung wirklich passt.",
+    points: [
+      "Zertifizierte Qualitätsvisiten",
+      "Pflege-Zustandskontrollen bei 24-Stunden-Betreuungen",
+      "Für Familien ebenso wie für Agenturen",
+    ],
   },
 ];
 
 const STEPS = [
   {
     title: "Erstgespräch",
-    text: "Wir besprechen Ihre Situation, Ihre Fragen und Ihre Ziele – telefonisch, online oder direkt bei Ihnen zu Hause.",
+    text: "Wir besprechen Ihre Situation, Ihre Fragen und Ihre Ziele – telefonisch, online oder direkt bei Ihnen zu Hause in Wien.",
   },
   {
     title: "Fachliche Einschätzung",
-    text: "Als DGKP mit Gutachter-Ausbildung beurteile ich den Pflegebedarf realistisch, unabhängig und nachvollziehbar.",
+    text: "Als DGKP mit Begutachter-Ausbildung beurteile ich den Pflegebedarf realistisch, unabhängig und nachvollziehbar – wie bei einer offiziellen Einstufung.",
   },
   {
     title: "Konkreter Plan",
-    text: "Sie erhalten klare Empfehlungen und konkrete nächste Schritte – von Anträgen bis zur Organisation der Versorgung.",
+    text: "Sie erhalten klare Empfehlungen und konkrete nächste Schritte – vom Pflegegeld-Antrag bis zur Organisation der Versorgung.",
   },
 ];
 
@@ -61,12 +137,14 @@ export default function HomePage() {
       <section className="hero" aria-labelledby="hero-heading">
         <div className="container hero__grid">
           <div>
+            <span className="eyebrow">Unabhängige Pflegeberatung in Wien</span>
             <h1 id="hero-heading">
               Pflegeberatung Wien – Gutachten &amp; Case Management
             </h1>
             <p className="hero__subtitle">
               Ihr unabhängiger Experte für Pflegegeld, Einstufungen und
-              Pflegeorganisation im Raum Wien.
+              Pflegeorganisation im Raum Wien – persönlich, vor Ort und auf
+              Augenhöhe.
             </p>
             <div className="hero__actions">
               <Link href="/termin" className="btn btn--primary">
@@ -76,17 +154,20 @@ export default function HomePage() {
                 Leistungen ansehen
               </a>
             </div>
-            <ul className="trust-list" aria-label="Qualifikationen und Vorteile">
-              {TRUST_BADGES.map((badge) => (
-                <li key={badge}>{badge}</li>
+            <ul className="trust-grid" aria-label="Qualifikationen">
+              {TRUST_SIGNALS.map((t) => (
+                <li key={t.term}>
+                  <strong>{t.term}</strong>
+                  <span>{t.detail}</span>
+                </li>
               ))}
             </ul>
           </div>
           <div className="hero__image">
             <img
-              src="/hero-illustration.svg"
+              src="/illustration-beratung.svg"
               alt=""
-              width={700}
+              width={720}
               height={520}
               loading="eager"
             />
@@ -126,12 +207,11 @@ export default function HomePage() {
               </div>
               <div>
                 <figure className="about-figure">
-                  {/* TODO: replace with a real portrait photo before go-live */}
                   <img
-                    src="/portrait-placeholder.svg"
-                    alt="Porträt von Anes Mehremic (Platzhalterbild)"
+                    src="/illustration-pflegegeld.svg"
+                    alt="Illustration eines Pflegegeld-Antrags mit Checkliste, Beratungsmappe und Prüfsiegel"
                     width={480}
-                    height={480}
+                    height={420}
                     loading="lazy"
                   />
                 </figure>
@@ -152,7 +232,7 @@ export default function HomePage() {
       {/* ---------------- Leistungen ---------------- */}
       <section
         id="leistungen"
-        className="section section--grey"
+        className="section section--sage"
         aria-labelledby="services-heading"
       >
         <div className="container">
@@ -161,18 +241,21 @@ export default function HomePage() {
             <h2 id="services-heading">Meine Leistungen für Sie</h2>
             <p className="section-intro">
               Von der Pflegegeld-Einstufung bis zur Qualitätssicherung – professionelle
-              Unterstützung in allen Phasen der Pflege.
+              Unterstützung in allen Phasen der Pflege, in ganz Wien.
             </p>
           </Reveal>
           <div className="card-grid">
             {SERVICES.map((s) => (
               <Reveal key={s.title}>
                 <article className="card">
-                  <span className="card__icon" aria-hidden="true">
-                    {s.icon}
-                  </span>
+                  <span className="card__icon">{s.icon}</span>
                   <h3>{s.title}</h3>
                   <p>{s.text}</p>
+                  <ul className="card__list">
+                    {s.points.map((point) => (
+                      <li key={point}>{point}</li>
+                    ))}
+                  </ul>
                 </article>
               </Reveal>
             ))}
@@ -187,7 +270,7 @@ export default function HomePage() {
             <span className="eyebrow">Ablauf</span>
             <h2 id="steps-heading">So einfach funktioniert es</h2>
           </Reveal>
-          <ol className="steps" style={{ listStyle: "none", padding: 0, margin: 0 }}>
+          <ol className="steps">
             {STEPS.map((step, i) => (
               <li key={step.title}>
                 <Reveal>
@@ -206,12 +289,12 @@ export default function HomePage() {
       </section>
 
       {/* ---------------- CTA ---------------- */}
-      <section className="section section--teal" aria-labelledby="cta-heading">
+      <section className="section section--petrol" aria-labelledby="cta-heading">
         <div className="container" style={{ textAlign: "center" }}>
           <Reveal>
             <h2 id="cta-heading">Bereit für den ersten Schritt?</h2>
             <p className="section-intro" style={{ marginInline: "auto" }}>
-              Buchen Sie jetzt Ihren Termin – unkompliziert und verbindlich.
+              Buchen Sie jetzt Ihren Beratungstermin – unkompliziert und verbindlich.
             </p>
             <Link href="/termin" className="btn btn--primary">
               Jetzt Termin buchen
