@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStore } from "@/lib/store";
+import { isAdminRequest } from "@/lib/auth";
 import { APPOINTMENT_TYPES, toPublicSlot, type CreateSlotInput } from "@/lib/types";
 
 export const dynamic = "force-dynamic";
 
 /**
  * GET /api/appointments          → public: only open, future slots (no customer data)
- * GET /api/appointments?scope=all → admin: everything incl. customer data
- *
- * TODO (go-live): protect scope=all with Supabase Auth – see README.
+ * GET /api/appointments?scope=all → admin only: everything incl. customer data
  */
 export async function GET(req: NextRequest) {
   const scope = req.nextUrl.searchParams.get("scope");
@@ -16,6 +15,9 @@ export async function GET(req: NextRequest) {
 
   try {
     if (scope === "all") {
+      if (!isAdminRequest(req)) {
+        return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+      }
       const all = await store.listAll();
       return NextResponse.json(all);
     }
@@ -32,6 +34,10 @@ export async function GET(req: NextRequest) {
  * Validates times and rejects overlapping slots (also enforced in the store).
  */
 export async function POST(req: NextRequest) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+  }
+
   let body: Partial<CreateSlotInput>;
   try {
     body = await req.json();

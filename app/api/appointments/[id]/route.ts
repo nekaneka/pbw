@@ -1,16 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getStore } from "@/lib/store";
+import { isAdminRequest } from "@/lib/auth";
 
 export const dynamic = "force-dynamic";
 
-/**
- * DELETE /api/appointments/:id → admin deletes a slot.
- * TODO (go-live): protect with Supabase Auth – see README.
- */
+/** DELETE /api/appointments/:id → admin only: deletes a slot. */
 export async function DELETE(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!isAdminRequest(req)) {
+    return NextResponse.json({ error: "Nicht angemeldet." }, { status: 401 });
+  }
   const { id } = await params;
   try {
     const result = await getStore().delete(id);

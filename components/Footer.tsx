@@ -18,7 +18,8 @@ export default function Footer() {
         <p>
           <Link href="/impressum">Impressum</Link> ·{" "}
           <Link href="/datenschutz">Datenschutz</Link> ·{" "}
-          <Link href="/termin">Termin buchen</Link>
+          <Link href="/termin">Termin buchen</Link> ·{" "}
+          <Link href="/admin">Adminbereich</Link>
         </p>
         <div className="footer-legal">
           <p>Kleinunternehmer gemäß § 6 Abs. 1 Z 27 UStG – umsatzsteuerbefreit.</p>

@@ -12,10 +12,12 @@ Moderne, barrierearme Website mit Online-Terminbuchung für eine Pflegeberatung 
   - Buchung mit Name, E-Mail, Telefon, Anliegen und Nachricht
   - **Serverseitige Validierung**: ein Termin kann nur gebucht werden, wenn er noch `open` ist (bei Supabase als atomarer Conditional-Update → keine Doppelbuchung möglich)
   - Gebuchte Termine verschwinden sofort aus der öffentlichen Liste
-- **Adminbereich** (auf `/termin`, wird später mit Login geschützt):
+- **Adminbereich** (`/admin`, **passwortgeschützt**):
+  - Login mit Passwort (`ADMIN_PASSWORD` in `.env.local`), Session als HttpOnly-Cookie
   - Verfügbarkeiten anlegen (Datum, Beginn, Ende, Terminart, Ort)
   - **Überschneidende Zeitfenster werden abgelehnt** (App-Logik + DB-Constraint)
   - Alle Termine inkl. Status und Kundendaten einsehen, Termine löschen
+  - Alle Admin-API-Routen sind serverseitig geschützt (401 ohne gültige Session)
 - **E-Mails** via Resend: Bestätigung an Kund:in + Benachrichtigung an Anbieter (ohne API-Key werden Mails nur in die Server-Konsole geloggt)
 - **SEO**: Metadaten, Open Graph, Twitter Cards, Canonical, JSON-LD (`ProfessionalService`), `robots.txt`, `sitemap.xml`
 - **Barrierefreiheit**: semantisches HTML, große Schrift, starker Kontrast, Skip-Link, sichtbare Fokus-Zustände, beschriftete Formulare, zugängliches mobiles Menü, `prefers-reduced-motion` wird respektiert
@@ -29,21 +31,21 @@ npm run dev
 
 → http://localhost:3000
 
-Ohne Konfiguration nutzt die App einen **lokalen JSON-Dateispeicher** (`./.data/appointments.json`) und loggt E-Mails in die Konsole. So kann der komplette Buchungsablauf sofort getestet werden:
+Ohne weitere Konfiguration nutzt die App einen **lokalen JSON-Dateispeicher** (`./.data/appointments.json`) und loggt E-Mails in die Konsole. So kann der komplette Buchungsablauf sofort getestet werden:
 
-1. `/termin` öffnen → im Adminbereich (unten) eine Verfügbarkeit anlegen
-2. Oben im Kundenbereich erscheint der Termin → auswählen, Formular ausfüllen, buchen
-3. Der Termin verschwindet aus der Kundenliste und erscheint im Adminbereich als **Gebucht** inkl. Kundendaten
+1. `/admin` öffnen → mit dem Passwort aus `.env.local` anmelden (`ADMIN_PASSWORD`, bitte ändern!) → Verfügbarkeit anlegen
+2. `/termin` öffnen → der Termin erscheint im Kundenbereich → auswählen, Formular ausfüllen, buchen
+3. Der Termin verschwindet aus der Kundenliste und erscheint unter `/admin` als **Gebucht** inkl. Kundendaten
 
 ### Buchungslogik testen (Smoke-Test)
 
 Bei laufendem Server (`npm run dev` oder `npm start`):
 
 ```bash
-node test-flow.mjs
+node test-flow.mjs <ADMIN_PASSWORD>
 ```
 
-Prüft automatisch: Slot anlegen, Überlappung abgelehnt, ungültige Zeiten abgelehnt, öffentliche Liste ohne Kundendaten, Buchung, Doppelbuchung abgelehnt, Admin-Sicht, Löschen.
+Prüft automatisch: Admin-Routen ohne Login gesperrt (401), Login/falsches Passwort, Slot anlegen, Überlappung abgelehnt, ungültige Zeiten abgelehnt, öffentliche Liste ohne Kundendaten, Buchung, Doppelbuchung abgelehnt, Admin-Sicht, Löschen.
 
 ## Produktiv-Setup
 
@@ -87,10 +89,12 @@ Sobald beide Variablen gesetzt sind, verwendet die App automatisch Supabase stat
 | E-Mail (`kontakt@pflegeberatung-wien.at`) | [`lib/site.ts`](lib/site.ts) + `PROVIDER_EMAIL` |
 | Resend API-Key | `.env.local` / Vercel |
 | Supabase URL/Key | `.env.local` / Vercel |
+| Admin-Passwort (`ADMIN_PASSWORD`) | `.env.local` / Vercel – **unbedingt sicheres Passwort wählen** |
 
 ## Offene Punkte (bewusst für später)
 
-- **Admin-Login**: Der Adminbereich auf `/termin` ist derzeit ungeschützt und muss vor Go-live mit Supabase Auth abgesichert werden (API-Routen `POST /api/appointments`, `DELETE /api/appointments/:id` und `GET /api/appointments?scope=all` prüfen dann die Session).
+- **Supabase Auth statt Passwort-Login**: Der Adminbereich ist mit einem Passwort (`ADMIN_PASSWORD`) und HttpOnly-Session-Cookie geschützt. Für mehrere Admins oder höhere Sicherheit später auf Supabase Auth umstellen – alle API-Routen prüfen zentral über `isAdminRequest()` in [`lib/auth.ts`](lib/auth.ts), nur diese Funktion muss ersetzt werden.
+- **Echte Fotos**: Die Illustrationen (`public/hero-illustration.svg`, `public/portrait-placeholder.svg`) sind Platzhalter im Markendesign – für mehr Vertrauen durch echte Porträt-/Beratungsfotos ersetzen.
 - **Impressum & Datenschutz**: Die Seiten `/impressum` und `/datenschutz` sind Platzhalter und **müssen vor Veröffentlichung rechtlich geprüft werden**.
 - Open-Graph-Bild (`og-image`) ergänzen, sobald Logo/Branding vorhanden ist.
 
@@ -99,19 +103,24 @@ Sobald beide Variablen gesetzt sind, verwendet die App automatisch Supabase stat
 ```
 app/
   page.tsx              Startseite
-  termin/page.tsx       Terminbuchung (Kunden + Admin)
+  termin/page.tsx       Terminbuchung (nur Kundenbereich)
+  admin/page.tsx        Adminbereich mit Login
   impressum/  datenschutz/   Rechtliche Platzhalterseiten
-  api/appointments/     GET (open/all), POST (Slot anlegen)
-    [id]/               DELETE (Slot löschen)
-    [id]/book/          POST (Buchung mit Serverprüfung)
+  api/appointments/     GET (open öffentlich / all nur Admin), POST (Slot anlegen, nur Admin)
+    [id]/               DELETE (Slot löschen, nur Admin)
+    [id]/book/          POST (Buchung mit Serverprüfung, öffentlich)
+  api/admin/            login/ logout/ (Session-Cookie)
   api/contact/          POST (Kontaktformular)
   robots.ts sitemap.ts  SEO
-components/             Header, Footer, Reveal, ContactForm, TerminClient
+components/             Header, Footer, Reveal, ContactForm, TerminClient, AdminClient
 lib/
   site.ts               Zentrale Stammdaten & Platzhalter
   types.ts              Datenmodell (appointments)
   store.ts              Datenzugriff: FileStore (dev) / SupabaseStore (prod)
+  auth.ts               Admin-Login (Passwort + HttpOnly-Session-Cookie)
+  format.ts             Datums-/Zeitformatierung (Europe/Vienna)
   email.ts              Resend-Integration
+public/                 Illustrationen (Platzhalter für echte Fotos)
 supabase/schema.sql     Datenbankschema inkl. Constraints & RLS
 ```
 

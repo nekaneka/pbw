@@ -304,6 +304,29 @@ img { max-width: 100%; height: auto; }
   padding-block: 4rem 3.5rem;
 }
 
+.hero__grid {
+  display: grid;
+  gap: 2.5rem;
+  align-items: center;
+  grid-template-columns: 1fr;
+}
+@media (min-width: 920px) {
+  .hero__grid { grid-template-columns: 1.1fr 0.9fr; }
+}
+
+.hero__image {
+  max-width: 26rem;
+  margin-inline: auto;
+}
+@media (min-width: 920px) {
+  .hero__image { max-width: none; }
+}
+.hero__image img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
 .hero__subtitle {
   font-size: var(--text-lg);
   color: var(--grey-500);
@@ -437,6 +460,17 @@ img { max-width: 100%; height: auto; }
 }
 @media (min-width: 900px) {
   .about-grid { grid-template-columns: 3fr 2fr; }
+}
+
+.about-figure {
+  margin: 0 0 1.25rem;
+}
+.about-figure img {
+  display: block;
+  width: 100%;
+  max-width: 22rem;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-card);
 }
 
 .about-values {
@@ -585,6 +619,18 @@ img { max-width: 100%; height: auto; }
   display: block;
   color: var(--grey-500);
   font-size: var(--text-sm);
+}
+
+.login-panel {
+  max-width: 26rem;
+}
+
+.admin-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
 }
 
 /* Admin table */

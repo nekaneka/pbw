@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "pflegeberatung-wien",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["start"],
+      "cwd": "C:\\Users\\mehre\\OneDrive\\Desktop\\PBW",
+      "port": 3000
+    }
+  ]
+}

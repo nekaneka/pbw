@@ -1,45 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useState, type FormEvent } from "react";
-import {
-  APPOINTMENT_TYPES,
-  BOOKING_REASONS,
-  DEFAULT_LOCATION,
-  type Appointment,
-  type PublicSlot,
-} from "@/lib/types";
-
-/* ------------------------------------------------------------------ */
-/* Helpers                                                             */
-/* ------------------------------------------------------------------ */
-
-const dateFmt = new Intl.DateTimeFormat("de-AT", {
-  weekday: "long",
-  day: "2-digit",
-  month: "2-digit",
-  year: "numeric",
-  timeZone: "Europe/Vienna",
-});
-const timeFmt = new Intl.DateTimeFormat("de-AT", {
-  hour: "2-digit",
-  minute: "2-digit",
-  timeZone: "Europe/Vienna",
-});
-
-function formatDate(iso: string): string {
-  return dateFmt.format(new Date(iso));
-}
-function formatRange(startIso: string, endIso: string): string {
-  return `${timeFmt.format(new Date(startIso))}–${timeFmt.format(new Date(endIso))} Uhr`;
-}
+import { BOOKING_REASONS, type PublicSlot } from "@/lib/types";
+import { formatDate, formatRange } from "@/lib/format";
 
 type Feedback = { ok: boolean; message: string } | null;
 
-/* ------------------------------------------------------------------ */
-/* Customer booking area                                               */
-/* ------------------------------------------------------------------ */
-
-function BookingArea({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => void }) {
+/**
+ * Customer booking area on /termin.
+ * Shows only open, future slots (the API never returns booked ones).
+ */
+export default function TerminClient() {
   const [slots, setSlots] = useState<PublicSlot[] | null>(null);
   const [loadError, setLoadError] = useState(false);
   const [selectedId, setSelectedId] = useState<string>("");
@@ -62,7 +33,7 @@ function BookingArea({ reloadKey, onChanged }: { reloadKey: number; onChanged: (
 
   useEffect(() => {
     void load();
-  }, [load, reloadKey]);
+  }, [load]);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -92,7 +63,7 @@ function BookingArea({ reloadKey, onChanged }: { reloadKey: number; onChanged: (
         // Slot may have been taken in the meantime – refresh the list.
         if (res.status === 409 || res.status === 404) {
           setSelectedId("");
-          onChanged();
+          void load();
         }
       } else {
         setFeedback({
@@ -102,7 +73,7 @@ function BookingArea({ reloadKey, onChanged }: { reloadKey: number; onChanged: (
         });
         form.reset();
         setSelectedId("");
-        onChanged();
+        void load();
       }
     } catch {
       setFeedback({ ok: false, message: "Buchung fehlgeschlagen. Bitte versuchen Sie es erneut." });
@@ -209,246 +180,5 @@ function BookingArea({ reloadKey, onChanged }: { reloadKey: number; onChanged: (
         </div>
       </div>
     </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Admin area                                                          */
-/* ------------------------------------------------------------------ */
-
-const STATUS_LABEL: Record<string, string> = {
-  open: "Offen",
-  booked: "Gebucht",
-  cancelled: "Storniert",
-};
-
-function AdminArea({ reloadKey, onChanged }: { reloadKey: number; onChanged: () => void }) {
-  const [appointments, setAppointments] = useState<Appointment[] | null>(null);
-  const [feedback, setFeedback] = useState<Feedback>(null);
-  const [saving, setSaving] = useState(false);
-
-  const load = useCallback(async () => {
-    try {
-      const res = await fetch("/api/appointments?scope=all", { cache: "no-store" });
-      if (!res.ok) throw new Error();
-      setAppointments((await res.json()) as Appointment[]);
-    } catch {
-      setAppointments([]);
-      setFeedback({ ok: false, message: "Termine konnten nicht geladen werden." });
-    }
-  }, []);
-
-  useEffect(() => {
-    void load();
-  }, [load, reloadKey]);
-
-  async function onCreate(e: FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    const form = e.currentTarget;
-    const data = new FormData(form);
-    const date = String(data.get("date") ?? "");
-    const start = String(data.get("start") ?? "");
-    const end = String(data.get("end") ?? "");
-
-    if (!date || !start || !end) {
-      setFeedback({ ok: false, message: "Bitte Datum, Beginn und Ende angeben." });
-      return;
-    }
-
-    setSaving(true);
-    setFeedback(null);
-    try {
-      const res = await fetch("/api/appointments", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          // Local Vienna wall-clock time, converted to ISO by the Date ctor.
-          start_time: new Date(`${date}T${start}`).toISOString(),
-          end_time: new Date(`${date}T${end}`).toISOString(),
-          appointment_type: data.get("type"),
-          location: data.get("location"),
-        }),
-      });
-      const json = await res.json();
-      if (!res.ok) {
-        setFeedback({ ok: false, message: json.error ?? "Termin konnte nicht angelegt werden." });
-      } else {
-        setFeedback({ ok: true, message: "Verfügbarkeit wurde angelegt." });
-        form.reset();
-        onChanged();
-      }
-    } catch {
-      setFeedback({ ok: false, message: "Termin konnte nicht angelegt werden." });
-    } finally {
-      setSaving(false);
-    }
-  }
-
-  async function onDelete(a: Appointment) {
-    const when = `${formatDate(a.start_time)}, ${formatRange(a.start_time, a.end_time)}`;
-    if (!window.confirm(`Termin am ${when} wirklich löschen?`)) return;
-    try {
-      const res = await fetch(`/api/appointments/${a.id}`, { method: "DELETE" });
-      const json = await res.json();
-      if (!res.ok) {
-        setFeedback({ ok: false, message: json.error ?? "Löschen fehlgeschlagen." });
-      } else {
-        setFeedback({ ok: true, message: "Termin wurde gelöscht." });
-        onChanged();
-      }
-    } catch {
-      setFeedback({ ok: false, message: "Löschen fehlgeschlagen." });
-    }
-  }
-
-  return (
-    <section aria-labelledby="admin-heading" className="section section--grey">
-      <div className="container">
-        <span className="eyebrow">Adminbereich</span>
-        <h2 id="admin-heading">Verfügbarkeiten verwalten</h2>
-        <p className="admin-note" role="note">
-          Hinweis: Dieser Bereich ist nur für den Anbieter bestimmt und wird vor dem
-          Go-live mit einem Login (Supabase Auth) geschützt.
-        </p>
-
-        <h3>Neue Verfügbarkeit anlegen</h3>
-        <form className="panel form-grid form-grid--2col" onSubmit={onCreate} noValidate>
-          <div className="form-field">
-            <label htmlFor="admin-date">Datum *</label>
-            <input id="admin-date" name="date" type="date" required />
-          </div>
-          <div className="form-field">
-            <label htmlFor="admin-type">Terminart *</label>
-            <select id="admin-type" name="type" required defaultValue={APPOINTMENT_TYPES[0]}>
-              {APPOINTMENT_TYPES.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="form-field">
-            <label htmlFor="admin-start">Beginn *</label>
-            <input id="admin-start" name="start" type="time" required />
-          </div>
-          <div className="form-field">
-            <label htmlFor="admin-end">Ende *</label>
-            <input id="admin-end" name="end" type="time" required />
-          </div>
-          <div className="form-field form-field--full">
-            <label htmlFor="admin-location">Ort</label>
-            <input
-              id="admin-location"
-              name="location"
-              type="text"
-              defaultValue={DEFAULT_LOCATION}
-            />
-          </div>
-          <div className="form-field--full">
-            <button type="submit" className="btn btn--primary" disabled={saving}>
-              {saving ? "Wird angelegt …" : "Verfügbarkeit anlegen"}
-            </button>
-          </div>
-        </form>
-
-        <div aria-live="polite">
-          {feedback && (
-            <p className={`alert ${feedback.ok ? "alert--success" : "alert--error"}`} role="status">
-              {feedback.message}
-            </p>
-          )}
-        </div>
-
-        <h3 style={{ marginTop: "2rem" }}>Alle Termine</h3>
-        {appointments === null ? (
-          <p role="status">Termine werden geladen …</p>
-        ) : appointments.length === 0 ? (
-          <p>Noch keine Termine angelegt.</p>
-        ) : (
-          <div className="table-wrap">
-            <table className="admin-table">
-              <caption className="sr-only" style={{ position: "absolute", left: "-9999px" }}>
-                Alle Termine mit Status und Kundendaten
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Termin</th>
-                  <th scope="col">Art / Ort</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Kunde</th>
-                  <th scope="col">Aktion</th>
-                </tr>
-              </thead>
-              <tbody>
-                {appointments.map((a) => (
-                  <tr key={a.id}>
-                    <td>
-                      <strong>{formatDate(a.start_time)}</strong>
-                      <br />
-                      {formatRange(a.start_time, a.end_time)}
-                    </td>
-                    <td>
-                      {a.appointment_type}
-                      <br />
-                      {a.location}
-                    </td>
-                    <td>
-                      <span className={`status-badge status-badge--${a.status}`}>
-                        {STATUS_LABEL[a.status] ?? a.status}
-                      </span>
-                    </td>
-                    <td className="customer-cell">
-                      {a.status === "booked" ? (
-                        <>
-                          <strong>{a.customer_name}</strong>
-                          {a.customer_email}
-                          <br />
-                          {a.customer_phone}
-                          <br />
-                          {a.customer_reason}
-                          {a.customer_message ? (
-                            <>
-                              <br />
-                              <em>„{a.customer_message}“</em>
-                            </>
-                          ) : null}
-                        </>
-                      ) : (
-                        "–"
-                      )}
-                    </td>
-                    <td>
-                      <button
-                        type="button"
-                        className="btn btn--danger"
-                        onClick={() => onDelete(a)}
-                      >
-                        Löschen
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
-    </section>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-/* Page wrapper – keeps both areas in sync                             */
-/* ------------------------------------------------------------------ */
-
-export default function TerminClient() {
-  const [reloadKey, setReloadKey] = useState(0);
-  const refresh = useCallback(() => setReloadKey((k) => k + 1), []);
-
-  return (
-    <>
-      <BookingArea reloadKey={reloadKey} onChanged={refresh} />
-      <AdminArea reloadKey={reloadKey} onChanged={refresh} />
-    </>
   );
 }

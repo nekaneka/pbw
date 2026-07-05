@@ -59,27 +59,38 @@ export default function HomePage() {
     <>
       {/* ---------------- Hero ---------------- */}
       <section className="hero" aria-labelledby="hero-heading">
-        <div className="container">
-          <h1 id="hero-heading">
-            Pflegeberatung Wien – Gutachten &amp; Case Management
-          </h1>
-          <p className="hero__subtitle">
-            Ihr unabhängiger Experte für Pflegegeld, Einstufungen und
-            Pflegeorganisation im Raum Wien.
-          </p>
-          <div className="hero__actions">
-            <Link href="/termin" className="btn btn--primary">
-              Jetzt Termin buchen
-            </Link>
-            <a href="#leistungen" className="btn btn--secondary">
-              Leistungen ansehen
-            </a>
+        <div className="container hero__grid">
+          <div>
+            <h1 id="hero-heading">
+              Pflegeberatung Wien – Gutachten &amp; Case Management
+            </h1>
+            <p className="hero__subtitle">
+              Ihr unabhängiger Experte für Pflegegeld, Einstufungen und
+              Pflegeorganisation im Raum Wien.
+            </p>
+            <div className="hero__actions">
+              <Link href="/termin" className="btn btn--primary">
+                Jetzt Termin buchen
+              </Link>
+              <a href="#leistungen" className="btn btn--secondary">
+                Leistungen ansehen
+              </a>
+            </div>
+            <ul className="trust-list" aria-label="Qualifikationen und Vorteile">
+              {TRUST_BADGES.map((badge) => (
+                <li key={badge}>{badge}</li>
+              ))}
+            </ul>
           </div>
-          <ul className="trust-list" aria-label="Qualifikationen und Vorteile">
-            {TRUST_BADGES.map((badge) => (
-              <li key={badge}>{badge}</li>
-            ))}
-          </ul>
+          <div className="hero__image">
+            <img
+              src="/hero-illustration.svg"
+              alt=""
+              width={700}
+              height={520}
+              loading="eager"
+            />
+          </div>
         </div>
       </section>
 
@@ -113,14 +124,26 @@ export default function HomePage() {
                   <strong>konkrete nächste Schritte</strong> – keine leeren Versprechen.
                 </p>
               </div>
-              <ul className="about-values" aria-label="Meine Grundsätze">
-                <li>Unabhängigkeit</li>
-                <li>Empathie</li>
-                <li>Fachliche Präzision</li>
-                <li>Unterstützung für Angehörige</li>
-                <li>Realistische Einschätzung des Pflegebedarfs</li>
-                <li>Konkrete nächste Schritte</li>
-              </ul>
+              <div>
+                <figure className="about-figure">
+                  {/* TODO: replace with a real portrait photo before go-live */}
+                  <img
+                    src="/portrait-placeholder.svg"
+                    alt="Porträt von Anes Mehremic (Platzhalterbild)"
+                    width={480}
+                    height={480}
+                    loading="lazy"
+                  />
+                </figure>
+                <ul className="about-values" aria-label="Meine Grundsätze">
+                  <li>Unabhängigkeit</li>
+                  <li>Empathie</li>
+                  <li>Fachliche Präzision</li>
+                  <li>Unterstützung für Angehörige</li>
+                  <li>Realistische Einschätzung des Pflegebedarfs</li>
+                  <li>Konkrete nächste Schritte</li>
+                </ul>
+              </div>
             </div>
           </Reveal>
         </div>
