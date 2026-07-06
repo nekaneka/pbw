@@ -66,3 +66,9 @@ alter table public.appointments
 alter table public.appointments enable row level security;
 
 -- no policies for anon/authenticated => no direct access
+
+-- Explicit grants for the server-side service role, so the app works even
+-- when the project was created with "automatically expose new tables"
+-- disabled (service_role bypasses RLS by design).
+grant usage on schema public to service_role;
+grant all on public.appointments to service_role;
