@@ -621,6 +621,135 @@ img { max-width: 100%; height: auto; }
 
 /* ---------------- Booking page ---------------- */
 
+/* Calendar – large touch targets and strong states for older users */
+.cal {
+  background: var(--white);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  box-shadow: var(--shadow-card);
+  max-width: 34rem;
+}
+
+.cal__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.cal__month {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  color: var(--petrol-900);
+  margin: 0;
+}
+
+.cal__nav {
+  width: 48px;
+  height: 48px;
+  background: var(--white);
+  border: 1.5px solid var(--line);
+  border-radius: var(--radius-sm);
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--ink);
+  cursor: pointer;
+  transition: background var(--transition), border-color var(--transition);
+}
+.cal__nav:hover:not(:disabled) {
+  background: var(--petrol-50);
+  border-color: var(--petrol-600);
+}
+.cal__nav:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.cal__weekdays,
+.cal__grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.cal__weekdays {
+  margin-bottom: 5px;
+}
+.cal__weekdays span {
+  text-align: center;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--grey-500);
+}
+
+.cal__day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 52px;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+}
+
+/* days without free slots – plain, clearly non-interactive */
+span.cal__day {
+  color: var(--grey-500);
+  opacity: 0.5;
+}
+
+/* days with free slots – bookable */
+button.cal__day--available {
+  background: var(--petrol-50);
+  border: 2px solid var(--petrol-100);
+  color: var(--petrol-900);
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+button.cal__day--available:hover {
+  border-color: var(--petrol-600);
+}
+button.cal__day--available[aria-pressed="true"] {
+  background: var(--petrol-700);
+  border-color: var(--petrol-700);
+  color: var(--white);
+}
+
+.cal__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--petrol-600);
+  margin-top: 3px;
+}
+button.cal__day--available[aria-pressed="true"] .cal__dot {
+  background: var(--gold-100);
+}
+
+.cal__empty {
+  margin: 1rem 0 0;
+  font-size: var(--text-sm);
+  color: var(--grey-500);
+}
+
+.cal__jump {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--petrol-600);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
 .slot-list {
   list-style: none;
   margin: 0 0 1.5rem;
