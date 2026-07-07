@@ -282,6 +282,14 @@ img { max-width: 100%; height: auto; }
   .site-nav .nav-cta { margin: 0 0 0 0.5rem; }
 }
 
+.site-nav a.btn--primary {
+  color: var(--white);
+}
+
+.site-nav a.btn--primary:hover {
+  color: var(--ink);
+}
+
 /* ---------------- Buttons ---------------- */
 
 .btn {
