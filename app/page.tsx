@@ -1,7 +1,10 @@
+import type { ReactNode } from "react";
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
 import ContactForm from "@/components/ContactForm";
 import { SITE } from "@/lib/site";
+import { SERVICES, STEPS, FAQS } from "@/lib/content";
+import { faqGraph } from "@/lib/jsonld";
 
 const TRUST_SIGNALS = [
   {
@@ -22,9 +25,9 @@ const TRUST_SIGNALS = [
   },
 ];
 
-/* Small custom stroke icons in the brand palette – one per service. */
-const ICONS = {
-  document: (
+/* Small custom stroke icons in the brand palette – keyed by service slug. */
+const ICONS: Record<string, ReactNode> = {
+  "pflegegeld-einstufung": (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M7 3h7l4 4v14H7z" />
       <path d="M14 3v4h4" />
@@ -32,21 +35,21 @@ const ICONS = {
       <path d="M10 17h5" />
     </svg>
   ),
-  route: (
+  "case-management": (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="6" cy="19" r="2.5" />
       <circle cx="18" cy="5" r="2.5" />
       <path d="M8.5 19H15a3 3 0 0 0 0-6H9a3 3 0 0 1 0-6h6.5" />
     </svg>
   ),
-  home: (
+  "wohnraumberatung": (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M3 11l9-7 9 7" />
       <path d="M5 10v10h14V10" />
       <path d="M10 20v-6h4v6" />
     </svg>
   ),
-  people: (
+  "angehoerigen-coaching": (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="8.5" cy="8" r="3" />
       <circle cx="16.5" cy="9.5" r="2.4" />
@@ -54,7 +57,7 @@ const ICONS = {
       <path d="M14.5 15.6c2.7 0 5 1.8 5 4.4" />
     </svg>
   ),
-  shield: (
+  "qualitaetssicherung": (
     <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <path d="M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z" />
       <path d="M9 12l2 2 4-4.5" />
@@ -62,77 +65,14 @@ const ICONS = {
   ),
 };
 
-const SERVICES = [
-  {
-    icon: ICONS.document,
-    title: "Pflegegeld-Einstufung & Gutachten",
-    text: "Damit der tatsächliche Pflegebedarf auch anerkannt wird.",
-    points: [
-      "Unabhängige Ersteinstufung bei Ihnen zu Hause",
-      "Erst- und Erhöhungsanträge fachlich vorbereitet",
-      "Begleitung bei Begutachtungsterminen von PVA, ÖGK & Co.",
-    ],
-  },
-  {
-    icon: ICONS.route,
-    title: "Privates Case & Care Management",
-    text: "Die passende Versorgung planen, organisieren und koordinieren.",
-    points: [
-      "Häusliches Pflege-Audit mit klarem Ergebnis",
-      "Individueller Versorgungsplan für Ihre Situation",
-      "Vermittlung mobiler Dienste und 24-Stunden-Betreuung",
-    ],
-  },
-  {
-    icon: ICONS.home,
-    title: "Wohnraum- & Barrierefreiheitsberatung",
-    text: "Sicher zu Hause wohnen bleiben – so lange wie möglich.",
-    points: [
-      "Analyse von Sturzquellen in der Wohnung",
-      "Pflegefachliche Umbau-Gutachten",
-      "Unterlagen für Förderansuchen, z. B. Sozialministeriumservice",
-    ],
-  },
-  {
-    icon: ICONS.people,
-    title: "Angehörigen-Coaching",
-    text: "Pflegende Angehörige stärken und entlasten.",
-    points: [
-      "Praxisschulung direkt am Krankenbett",
-      "Rückenschonende Mobilisation & Kinästhetik",
-      "Entlastungsgespräche zur Burnout-Prophylaxe",
-    ],
-  },
-  {
-    icon: ICONS.shield,
-    title: "Qualitätssicherung",
-    text: "Gewissheit, dass die Betreuung wirklich passt.",
-    points: [
-      "Zertifizierte Qualitätsvisiten",
-      "Pflege-Zustandskontrollen bei 24-Stunden-Betreuungen",
-      "Für Familien ebenso wie für Agenturen",
-    ],
-  },
-];
-
-const STEPS = [
-  {
-    title: "Erstgespräch",
-    text: "Wir besprechen Ihre Situation, Ihre Fragen und Ihre Ziele – telefonisch, online oder direkt bei Ihnen zu Hause in Wien.",
-  },
-  {
-    title: "Fachliche Einschätzung",
-    text: "Als DGKP mit Begutachter-Ausbildung beurteile ich den Pflegebedarf realistisch, unabhängig und nachvollziehbar – wie bei einer offiziellen Einstufung.",
-  },
-  {
-    title: "Konkreter Plan",
-    text: "Sie erhalten klare Empfehlungen und konkrete nächste Schritte – vom Pflegegeld-Antrag bis zur Organisation der Versorgung.",
-  },
-];
-
 export default function HomePage() {
   return (
     <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqGraph()) }}
+      />
+
       {/* ---------------- Hero ---------------- */}
       <section className="hero" aria-labelledby="hero-heading">
         <div className="container hero__grid">
@@ -248,7 +188,7 @@ export default function HomePage() {
             {SERVICES.map((s) => (
               <Reveal key={s.title}>
                 <article className="card">
-                  <span className="card__icon">{s.icon}</span>
+                  <span className="card__icon">{ICONS[s.slug]}</span>
                   <h3>{s.title}</h3>
                   <p>{s.text}</p>
                   <ul className="card__list">
@@ -300,6 +240,33 @@ export default function HomePage() {
               Jetzt Termin buchen
             </Link>
           </Reveal>
+        </div>
+      </section>
+
+      {/* ---------------- FAQ ---------------- */}
+      <section id="faq" className="section section--sage" aria-labelledby="faq-heading">
+        <div className="container">
+          <Reveal>
+            <span className="eyebrow">Häufige Fragen</span>
+            <h2 id="faq-heading">Antworten rund um Pflegegeld &amp; Pflegeberatung</h2>
+            <p className="section-intro">
+              Die wichtigsten Fragen zu Pflegegeld, Einstufung und Beratung in Wien –
+              kurz und verständlich beantwortet.
+            </p>
+          </Reveal>
+          <div className="faq-list">
+            {FAQS.map((faq) => (
+              <Reveal key={faq.question}>
+                <details className="faq-item">
+                  <summary>
+                    <span>{faq.question}</span>
+                    <span className="faq-item__marker" aria-hidden="true" />
+                  </summary>
+                  <p>{faq.answer}</p>
+                </details>
+              </Reveal>
+            ))}
+          </div>
         </div>
       </section>
 

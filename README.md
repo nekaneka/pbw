@@ -39,8 +39,20 @@ Ruhige, barrierearme Website mit Online-Terminbuchung und Stornierung für eine 
   Kontaktformular und Login ([`lib/rate-limit.ts`](lib/rate-limit.ts)). Für echten
   Produktionsbetrieb die Zähler in Vercel KV / Upstash Redis auslagern – nur diese eine
   Datei muss dafür geändert werden
-- **SEO**: Metadaten, Open Graph, Twitter Cards, Canonical, JSON-LD (`ProfessionalService`),
-  `robots.txt`, `sitemap.xml`; Storno- und Adminseiten sind `noindex`
+- **SEO** (umfassend optimiert):
+  - Verlinkte JSON-LD-Entitäten (`@graph`): `LocalBusiness`/`ProfessionalService` mit
+    Adresse, Geo-Koordinaten, Einzugsgebiet, Leistungskatalog und Öffnungszeiten,
+    dazu `Person` (DGKP mit Qualifikationen) und `WebSite`
+  - `FAQPage`-Structured-Data mit sichtbarem FAQ-Bereich (deckt Long-Tail-Suchen zu
+    Pflegegeld, Einstufung, Kosten etc. ab)
+  - Dynamisch generiertes Open-Graph-Bild (`/opengraph-image`, echtes PNG), Favicon
+    (`/icon`), Apple-Touch-Icon und Web-App-Manifest
+  - Vollständige Metadaten: Title-Template, Description, Open Graph, Twitter Cards,
+    Canonical pro Seite, `googleBot`-Direktiven (max-image-preview, max-snippet)
+  - `robots.txt`, `sitemap.xml` (mit `lastModified`); Storno- und Adminseiten sind `noindex`
+  - Optionale Search-Console-Verifizierung über `GOOGLE_SITE_VERIFICATION`
+  - Zentrale Inhalte (Leistungen, FAQ) in [`lib/content.ts`](lib/content.ts): Seite und
+    Structured Data teilen eine Quelle und können nicht auseinanderdriften
 - **Barrierefreiheit**: semantisches HTML, große Schrift, starker Kontrast, Skip-Link,
   sichtbare Fokus-Zustände, beschriftete Formulare, zugängliches mobiles Menü,
   `prefers-reduced-motion` wird respektiert
@@ -135,7 +147,13 @@ Kontaktbereich, Metadaten, JSON-LD, Sitemap und Robots.
 - **Impressum & Datenschutz**: Die Seiten `/impressum` und `/datenschutz` sind strukturierte
   Entwürfe mit markierten TODO-Stellen und **müssen vor Veröffentlichung rechtlich geprüft
   werden**.
-- Open-Graph-Bild (`og-image`) ergänzen, sobald Logo/Branding final ist.
+- **Wichtigster SEO-Schritt nach dem Go-live**: ein **Google-Unternehmensprofil**
+  (Google Business Profile) anlegen und verifizieren – das ist für lokale Suchen
+  („Pflegeberatung Wien") der größte Hebel und speist die Karten-/Local-Pack-Anzeige.
+  Danach Search Console verifizieren (`GOOGLE_SITE_VERIFICATION`) und die `sitemap.xml`
+  einreichen.
+- Exakte Geo-Koordinaten der Adresse in [`lib/site.ts`](lib/site.ts) hinterlegen
+  (aktuell Näherungswert für 1220 Wien) und reale Social-Profile in `sameAs` ergänzen.
 
 Die Illustrationen (`public/illustration-beratung.svg`, `public/illustration-pflegegeld.svg`)
 sind eigens für die Seite gestaltete Motive im Markenstil (Beratungsgespräch, Pflegegeld-

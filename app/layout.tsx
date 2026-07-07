@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { SITE } from "@/lib/site";
+import { organizationGraph } from "@/lib/jsonld";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,10 +13,17 @@ export const metadata: Metadata = {
   },
   description: SITE.description,
   keywords: SITE.keywords,
+  applicationName: SITE.shortName,
+  authors: [{ name: SITE.owner }],
+  creator: SITE.owner,
+  publisher: SITE.owner,
+  category: "health",
   alternates: {
     // TODO: adjust once the final domain is registered
     canonical: "/",
   },
+  // Allow the browser to linkify contact details (helpful on mobile).
+  formatDetection: { telephone: true, email: true, address: true },
   openGraph: {
     type: "website",
     locale: "de_AT",
@@ -32,43 +40,18 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
   },
-};
-
-/** JSON-LD structured data for a local professional service. */
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "ProfessionalService",
-  name: SITE.name,
-  description: SITE.description,
-  url: SITE.url,
-  telephone: SITE.phone,
-  email: SITE.email,
-  founder: {
-    "@type": "Person",
-    name: SITE.owner,
-    jobTitle: "Diplomierter Gesundheits- und Krankenpfleger (DGKP)",
-  },
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: SITE.address.street,
-    postalCode: SITE.address.zip,
-    addressLocality: SITE.address.city,
-    addressCountry: SITE.address.country,
-  },
-  areaServed: {
-    "@type": "City",
-    name: "Wien",
-  },
-  knowsAbout: [
-    "Pflegegeld-Einstufung",
-    "Pflegegutachten",
-    "Case Management",
-    "Care Management",
-    "24-Stunden-Betreuung",
-    "Barrierefreiheitsberatung",
-    "Angehörigen-Coaching",
-  ],
+  // Set GOOGLE_SITE_VERIFICATION in the environment to verify Search Console.
+  ...(process.env.GOOGLE_SITE_VERIFICATION
+    ? { verification: { google: process.env.GOOGLE_SITE_VERIFICATION } }
+    : {}),
 };
 
 export default function RootLayout({
@@ -82,7 +65,7 @@ export default function RootLayout({
       <body suppressHydrationWarning>
         <script
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationGraph()) }}
         />
         <a href="#main" className="skip-link">
           Zum Inhalt springen
