@@ -64,6 +64,10 @@
 html {
   scroll-behavior: smooth;
   scroll-padding-top: 5.5rem; /* sticky header offset for anchor links */
+  /* Safety net against horizontal page scroll on narrow screens.
+     `clip` (unlike `hidden`) does not create a scroll container, so
+     position: sticky on the header keeps working. */
+  overflow-x: clip;
 }
 
 body {
@@ -74,6 +78,10 @@ body {
   color: var(--ink);
   background: var(--paper);
   -webkit-font-smoothing: antialiased;
+  overflow-x: clip;
+  /* Long German compounds and e-mail addresses must never widen the page.
+     overflow-wrap inherits, so this covers all text content. */
+  overflow-wrap: break-word;
 }
 
 h1, h2, h3 {
@@ -82,6 +90,9 @@ h1, h2, h3 {
   line-height: 1.22;
   color: var(--petrol-900);
   text-wrap: balance;
+  /* Hyphenate long compounds ("Unternehmensgegenstand") instead of
+     overflowing on narrow screens; uses the de-AT lang attribute. */
+  hyphens: auto;
 }
 
 h1 { font-size: var(--text-3xl); margin: 0 0 1rem; }
