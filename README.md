@@ -138,6 +138,18 @@ Kontaktbereich, Metadaten, JSON-LD, Sitemap und Robots.
 | Supabase URL/Key | `.env.local` / Vercel |
 | Admin-Passwort (`ADMIN_PASSWORD`) | `.env.local` / Vercel – **unbedingt sicheres Passwort wählen** |
 
+## Supabase Free-Tier: Keep-alive gegen Auto-Pause
+
+Supabase pausiert Free-Tier-Projekte nach **7 Tagen ohne einen einzigen API-Request**.
+Deshalb ruft ein Vercel-Cron-Job (kostenlos im Hobby-Plan, siehe [`vercel.json`](vercel.json))
+täglich `GET /api/cron/keepalive` auf – eine minimale Datenbank-Abfrage, die das Projekt
+dauerhaft aktiv hält. Ein Pro-Upgrade ist dafür nicht nötig.
+
+- Optional `CRON_SECRET` in Vercel setzen (z. B. `openssl rand -hex 16`) – Vercel Cron
+  sendet den Wert automatisch als Bearer-Token, alle anderen Aufrufer erhalten 401.
+- Nach dem Go-live hält meist schon der echte Besucherverkehr das Projekt aktiv;
+  der Cron ist die Absicherung für ruhige Wochen.
+
 ## Offene Punkte (bewusst für später)
 
 - **Supabase Auth statt Passwort-Login**: Der Adminbereich ist mit einem Passwort
